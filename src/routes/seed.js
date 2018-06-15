@@ -3,7 +3,7 @@ import randomWords from 'random-words'
 const router = express.Router()
 
 router.get('/:format', (req, res) => {
-  const words = randomWords(parseInt(req.query.limit) || 5)
+  const words = randomWords(parseInt(req.query.limit) || 1)
 
   if (req.params.format === 'html') {
     res.status(200).render('pages/seed', {
