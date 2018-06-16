@@ -5,14 +5,20 @@ const router = express.Router()
 router.get('/:format', (req, res) => {
   datamuse.words({
     rel_bga: req.query.query,
-    max: req.query.limit || 1
+    max: req.query.limit+1 || 1
   })
     .then(json => {
       let words = []
 
       json.forEach(entry => {
-        words.push(entry.word)
+        if (entry.word !== '.') {
+          words.push(entry.word)
+        }
       })
+
+      if (words.length > req.query.limit) {
+        words = words.splice(0,10)
+      }
 
       if (req.params.format === 'html') {
         res.status(200).render('pages/related', {
