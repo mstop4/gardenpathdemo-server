@@ -28,18 +28,18 @@ const fetchWordsFromRedis = (res, format, query, limit) => {
 
   rClient.get(`wordList:${query}`, (err, reply) => {
     const wordList = JSON.parse(reply)
-    const nextListAll = wordList.nextList
+    const nextWordsAll = wordList.nextWords
 
     // Choose a random assortment of words
-    const numWords = limit ? Math.min(limit, nextListAll.length) : nextListAll.length
-    const choices = chance.unique(chance.integer, numWords, { min: 0, max: nextListAll.length - 1 })
-    let nextListSome = []
+    const numWords = limit ? Math.min(limit, nextWordsAll.length) : nextWordsAll.length
+    const choices = chance.unique(chance.integer, numWords, { min: 0, max: nextWordsAll.length - 1 })
+    let nextWordsSome = []
 
     choices.forEach(index => {
-      nextListSome.push(nextListAll[index])
+      nextWordsSome.push(nextWordsAll[index])
     })
 
-    data.nextList = nextListSome
+    data.nextWords = nextWordsSome
     sendResponse(res, format, data, 'pages/seed')
   })
 }
@@ -56,30 +56,30 @@ const fetchWordsFromDatamuse = (res, format, query, limit) => {
       let wordList = {}
 
       // Create next word list
-      let nextListAll = []
+      let nextWordsAll = []
 
       json.forEach(entry => {
         if (entry.word !== '.') {
-          nextListAll.push(entry.word)
+          nextWordsAll.push(entry.word)
         }
       })
 
       // Save word list to cache
-      wordList.nextList = nextListAll
+      wordList.nextWords = nextWordsAll
       rClient.set([`wordList:${query}`, JSON.stringify(wordList)], () => {
         console.log(query + ' set!')
       })
 
       // Choose a random assortment of words
-      const numWords = limit ? Math.min(limit, nextListAll.length) : nextListAll.length
-      const choices = chance.unique(chance.integer, numWords, { min: 0, max: nextListAll.length - 1 })
-      let nextListSome = []
+      const numWords = limit ? Math.min(limit, nextWordsAll.length) : nextWordsAll.length
+      const choices = chance.unique(chance.integer, numWords, { min: 0, max: nextWordsAll.length - 1 })
+      let nextWordsSome = []
 
       choices.forEach(index => {
-        nextListSome.push(nextListAll[index])
+        nextWordsSome.push(nextWordsAll[index])
       })
 
-      data.nextList = nextListSome
+      data.nextWords = nextWordsSome
       sendResponse(res, format, data, 'pages/seed')
     })
 }
