@@ -1,22 +1,59 @@
 import express from 'express'
 import datamuse from 'datamuse'
 import Chance from 'chance'
-//import rClient from '../helpers/redisDb'
+import rClient from '../helpers/redisDb'
+import sendResponse from '../helpers/sendResponse'
 
 const router = express.Router()
 const chance = new Chance()
 
 router.get('/:format', (req, res) => {
+  const queryLower = req.query.query.toLowerCase()
+
   // Check cache for word list first
+  rClient.exists(`wordList:${queryLower}`, (err, reply) => {
+    if (reply === 1) {
+      fetchWordsFromRedis(res, req.params.format, queryLower, req.query.limit)
+    } else {  
+      fetchWordsFromDatamuse(res, req.params.format, queryLower, req.query.limit)
+    }
+  })
+})
+
+const fetchWordsFromRedis = (res, format, query, limit) => {
+  // Payload container
+  let data = {
+    status: null
+  }
+
+  rClient.get(`wordList:${query}`, (err, reply) => {
+    const wordList = JSON.parse(reply)
+    const nextListAll = wordList.nextList
+
+    // Choose a random assortment of words
+    const numWords = limit ? Math.min(limit, nextListAll.length) : nextListAll.length
+    const choices = chance.unique(chance.integer, numWords, { min: 0, max: nextListAll.length - 1 })
+    let nextListSome = []
+
+    choices.forEach(index => {
+      nextListSome.push(nextListAll[index])
+    })
+
+    data.nextList = nextListSome
+    sendResponse(res, format, data, 'pages/seed')
+  })
+}
+
+const fetchWordsFromDatamuse = (res, format, query, limit) => {
+  let data = {
+    status: null
+  }
 
   datamuse.words({
-    rel_bga: req.query.query
+    rel_bga: query
   })
     .then(json => {
-      // Payload container
-      let data = {
-        status: null
-      }
+      let wordList = {}
 
       // Create next word list
       let nextListAll = []
@@ -27,9 +64,15 @@ router.get('/:format', (req, res) => {
         }
       })
 
-      // Choose a random assortment of owrds
-      const numWords = req.query.limit ? Math.min(req.query.limit, nextListAll.length) : nextListAll.length
-      const choices = chance.unique(chance.integer, numWords, {min: 0, max: nextListAll.length-1 })
+      // Save word list to cache
+      wordList.nextList = nextListAll
+      rClient.set([`wordList:${query}`, JSON.stringify(wordList)], () => {
+        console.log(query + ' set!')
+      })
+
+      // Choose a random assortment of words
+      const numWords = limit ? Math.min(limit, nextListAll.length) : nextListAll.length
+      const choices = chance.unique(chance.integer, numWords, { min: 0, max: nextListAll.length - 1 })
       let nextListSome = []
 
       choices.forEach(index => {
@@ -37,20 +80,8 @@ router.get('/:format', (req, res) => {
       })
 
       data.nextList = nextListSome
-
-      if (req.params.format === 'html') {
-        data.status = 'ok'
-        res.status(200).render('pages/related', {
-          data: data
-        })
-      } else if (req.params.format === 'json') {
-        data.status = 'ok'
-        res.setHeader('Content-Type', 'application/json')
-        res.status(200).send(JSON.stringify(nextListSome))
-      } else {
-        res.status(400).send('Error: Unknown format')
-      }
+      sendResponse(res, format, data, 'pages/seed')
     })
-})
+}
 
 module.exports = router
