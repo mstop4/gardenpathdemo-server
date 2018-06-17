@@ -10,10 +10,11 @@
     </header>
 
     <main>
+      <h3>Status: <%= data.status %></h3>
       <h2>Words</h2>
       <ul>
-        <% for (let i = 0; i < data.length; i++) { %>
-          <li><%= data[i] %></li>
+        <% for (let i = 0; i < data.seedWords.length; i++) { %>
+          <li><%= data.seedWords[i] %></li>
         <% } %>
       </ul>
     </main>

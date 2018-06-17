@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>Gallery</title>
+    <title>Garden Path</title>
   </head>
 
   <body>
@@ -10,10 +10,11 @@
     </header>
 
     <main>
+      <h3>Status: <%= data.status %></h3>
       <h2>Words</h2>
       <ul>
-        <% for (let i = 0; i < data.length; i++) { %>
-          <li><%= data[i] %></li>
+        <% for (let i = 0; i < data.nextList.length; i++) { %>
+          <li><%= data.nextList[i] %></li>
         <% } %>
       </ul>
     </main>
