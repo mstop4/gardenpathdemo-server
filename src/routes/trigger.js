@@ -11,7 +11,7 @@ router.get('/:format', (req, res) => {
   const queryLower = req.query.query.toLowerCase()
 
   // Check cache for word list first
-  rClient.exists(`next:${queryLower}`, (err, reply) => {
+  rClient.exists(`trigger:${queryLower}`, (err, reply) => {
     if (reply === 1) {
       fetchWordsFromRedis(res, req.params.format, queryLower, req.query.limit)
     } else {  
@@ -26,22 +26,22 @@ const fetchWordsFromRedis = (res, format, query, limit) => {
     status: null
   }
 
-  rClient.get(`next:${query}`, (err, reply) => {
+  rClient.get(`trigger:${query}`, (err, reply) => {
     const wordList = JSON.parse(reply)
-    const nextWordsAll = wordList.nextWords
+    const triggerWordsAll = wordList.triggerWords
 
     // Choose a random assortment of words
-    const numWords = limit ? Math.min(limit, nextWordsAll.length) : nextWordsAll.length
-    const choices = chance.unique(chance.integer, numWords, { min: 0, max: nextWordsAll.length - 1 })
-    let nextWordsSome = []
+    const numWords = limit ? Math.min(limit, triggerWordsAll.length) : triggerWordsAll.length
+    const choices = chance.unique(chance.integer, numWords, { min: 0, max: triggerWordsAll.length - 1 })
+    let triggerWordsSome = []
 
     choices.forEach(index => {
-      nextWordsSome.push(nextWordsAll[index])
+      triggerWordsSome.push(triggerWordsAll[index])
     })
 
-    data.nextWords = nextWordsSome
+    data.triggerWords = triggerWordsSome
 
-    sendResponse(res, format, data, 'pages/next')
+    sendResponse(res, format, data, 'pages/trigger')
   })
 }
 
@@ -52,7 +52,7 @@ const fetchWordsFromDatamuse = (res, format, query, limit) => {
 
   const promises = [
     datamuse.words({
-      rel_bga: query
+      rel_trg: query
     })
   ]
 
@@ -60,34 +60,34 @@ const fetchWordsFromDatamuse = (res, format, query, limit) => {
     .then(json => {
       let wordList = {}
 
-      // Create next word list
-      let nextWordsAll = []
+      // Create trigger word list
+      let triggerWordsAll = []
 
       json[0].forEach(entry => {
         if (entry.word !== '.') {
-          nextWordsAll.push(entry.word)
+          triggerWordsAll.push(entry.word)
         }
       })
 
       // Save word list to cache
-      wordList.nextWords = nextWordsAll
+      wordList.triggerWords = triggerWordsAll
 
       // Choose a random assortment of words
-      const numWords = limit ? Math.min(limit, nextWordsAll.length) : nextWordsAll.length
-      const choices = chance.unique(chance.integer, numWords, { min: 0, max: nextWordsAll.length - 1 })
-      let nextWordsSome = []
+      const numWords = limit ? Math.min(limit, triggerWordsAll.length) : triggerWordsAll.length
+      const choices = chance.unique(chance.integer, numWords, { min: 0, max: triggerWordsAll.length - 1 })
+      let triggerWordsSome = []
 
       choices.forEach(index => {
-        nextWordsSome.push(nextWordsAll[index])
+        triggerWordsSome.push(triggerWordsAll[index])
       })
 
-      data.nextWords = nextWordsSome
+      data.triggerWords = triggerWordsSome
 
-      rClient.set([`next:${query}`, JSON.stringify(wordList)], () => {
+      rClient.set([`trigger:${query}`, JSON.stringify(wordList)], () => {
         console.log(query + ' set!')
       })
 
-      sendResponse(res, format, data, 'pages/next')
+      sendResponse(res, format, data, 'pages/trigger')
     })
 }
 

@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Garden Path</title>
+  </head>
+
+  <body>
+    <header>
+      <h1>Garden Path</h1>
+    </header>
+
+    <main>
+      <h3>Status: <%= data.status %></h3>
+      <h2>Next Words</h2>
+      <ul>
+        <% for (let i = 0; i < data.nextWords.length; i++) { %>
+          <li><%= data.nextWords[i] %></li>
+        <% } %>
+      </ul>
+    </main>
+  </body>
+</html>
