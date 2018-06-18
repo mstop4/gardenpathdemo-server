@@ -11,10 +11,16 @@
 
     <main>
       <h3>Status: <%= data.status %></h3>
-      <h2>Words</h2>
+      <h2>Next Words</h2>
       <ul>
         <% for (let i = 0; i < data.nextWords.length; i++) { %>
           <li><%= data.nextWords[i] %></li>
+        <% } %>
+      </ul>
+      <h2>Trigger Words</h2>
+      <ul>
+        <% for (let i = 0; i < data.triggerWords.length; i++) { %>
+          <li><%= data.triggerWords[i] %></li>
         <% } %>
       </ul>
     </main>

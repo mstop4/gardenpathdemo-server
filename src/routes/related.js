@@ -29,10 +29,11 @@ const fetchWordsFromRedis = (res, format, query, limit) => {
   rClient.get(`wordList:${query}`, (err, reply) => {
     const wordList = JSON.parse(reply)
     const nextWordsAll = wordList.nextWords
+    const triggerWordsAll = wordList.triggerWords
 
     // Choose a random assortment of words
-    const numWords = limit ? Math.min(limit, nextWordsAll.length) : nextWordsAll.length
-    const choices = chance.unique(chance.integer, numWords, { min: 0, max: nextWordsAll.length - 1 })
+    let numWords = limit ? Math.min(limit, nextWordsAll.length) : nextWordsAll.length
+    let choices = chance.unique(chance.integer, numWords, { min: 0, max: nextWordsAll.length - 1 })
     let nextWordsSome = []
 
     choices.forEach(index => {
@@ -40,7 +41,18 @@ const fetchWordsFromRedis = (res, format, query, limit) => {
     })
 
     data.nextWords = nextWordsSome
-    sendResponse(res, format, data, 'pages/seed')
+
+    numWords = limit ? Math.min(limit, triggerWordsAll.length) : triggerWordsAll.length
+    choices = chance.unique(chance.integer, numWords, { min: 0, max: triggerWordsAll.length - 1 })
+    let triggerWordsSome = []
+
+    choices.forEach(index => {
+      triggerWordsSome.push(triggerWordsAll[index])
+    })
+
+    data.triggerWords = triggerWordsSome
+
+    sendResponse(res, format, data, 'pages/related')
   })
 }
 
@@ -49,16 +61,23 @@ const fetchWordsFromDatamuse = (res, format, query, limit) => {
     status: null
   }
 
-  datamuse.words({
-    rel_bga: query
-  })
+  const promises = [
+    datamuse.words({
+      rel_bga: query
+    }),
+    datamuse.words({
+      rel_trg: query
+    })
+  ]
+
+  Promise.all(promises)
     .then(json => {
       let wordList = {}
 
       // Create next word list
       let nextWordsAll = []
 
-      json.forEach(entry => {
+      json[0].forEach(entry => {
         if (entry.word !== '.') {
           nextWordsAll.push(entry.word)
         }
@@ -66,13 +85,10 @@ const fetchWordsFromDatamuse = (res, format, query, limit) => {
 
       // Save word list to cache
       wordList.nextWords = nextWordsAll
-      rClient.set([`wordList:${query}`, JSON.stringify(wordList)], () => {
-        console.log(query + ' set!')
-      })
 
       // Choose a random assortment of words
-      const numWords = limit ? Math.min(limit, nextWordsAll.length) : nextWordsAll.length
-      const choices = chance.unique(chance.integer, numWords, { min: 0, max: nextWordsAll.length - 1 })
+      let numWords = limit ? Math.min(limit, nextWordsAll.length) : nextWordsAll.length
+      let choices = chance.unique(chance.integer, numWords, { min: 0, max: nextWordsAll.length - 1 })
       let nextWordsSome = []
 
       choices.forEach(index => {
@@ -80,7 +96,36 @@ const fetchWordsFromDatamuse = (res, format, query, limit) => {
       })
 
       data.nextWords = nextWordsSome
-      sendResponse(res, format, data, 'pages/seed')
+
+      // Create trigger word list
+      let triggerWordsAll = []
+
+      json[1].forEach(entry => {
+        if (entry.word !== '.') {
+          triggerWordsAll.push(entry.word)
+        }
+      })
+
+      // Save word list to cache
+      wordList.triggerWords = triggerWordsAll
+
+      // Choose a random assortment of words
+      numWords = limit ? Math.min(limit, triggerWordsAll.length) : triggerWordsAll.length
+      choices = chance.unique(chance.integer, numWords, { min: 0, max: triggerWordsAll.length - 1 })
+      let triggerWordsSome = []
+
+      choices.forEach(index => {
+        triggerWordsSome.push(triggerWordsAll[index])
+      })
+
+      data.triggerWords = triggerWordsSome
+      console.dir(triggerWordsSome)
+
+      rClient.set([`wordList:${query}`, JSON.stringify(wordList)], () => {
+        console.log(query + ' set!')
+      })
+
+      sendResponse(res, format, data, 'pages/related')
     })
 }
 
