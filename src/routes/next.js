@@ -64,9 +64,6 @@ const fetchWordsFromDatamuse = (res, format, query, limit) => {
   const promises = [
     datamuse.words({
       rel_bga: query
-    }),
-    datamuse.words({
-      rel_trg: query
     })
   ]
 
@@ -119,7 +116,6 @@ const fetchWordsFromDatamuse = (res, format, query, limit) => {
       })
 
       data.triggerWords = triggerWordsSome
-      console.dir(triggerWordsSome)
 
       rClient.set([`wordList:${query}`, JSON.stringify(wordList)], () => {
         console.log(query + ' set!')
