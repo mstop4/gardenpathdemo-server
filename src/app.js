@@ -16,11 +16,13 @@ app.set('port', process.env.PORT || 3001)
 
 // Routes
 import index from './routes/index'
+import handshake from './routes/handshake'
 import seed from './routes/seed'
 import next from './routes/next'
 import trigger from './routes/trigger'
 
 app.use('/', index)
+app.use('/handshake', handshake)
 app.use('/seed', seed)
 app.use('/next', next)
 app.use('/trigger', trigger)
