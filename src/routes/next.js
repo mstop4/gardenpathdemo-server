@@ -50,20 +50,16 @@ const fetchWordsFromDatamuse = (res, format, query, limit) => {
     status: null
   }
 
-  const promises = [
-    datamuse.words({
-      rel_bga: query
-    })
-  ]
-
-  Promise.all(promises)
+  datamuse.words({
+    rel_bga: query
+  })
     .then(json => {
       let wordList = {}
 
       // Create next word list
       let nextWordsAll = []
 
-      json[0].forEach(entry => {
+      json.forEach(entry => {
         if (entry.word !== '.') {
           nextWordsAll.push(entry.word)
         }
