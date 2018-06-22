@@ -59,8 +59,9 @@ const fetchWordsFromDatamuse = (res, format, query, limit) => {
       // Create next word list
       let nextWordsAll = []
 
+      // get all words from list except periods and "I" (doesn't work for some reason)
       json.forEach(entry => {
-        if (entry.word !== '.') {
+        if (entry.word !== '.' && entry.word !== 'i') {
           nextWordsAll.push(entry.word)
         }
       })
