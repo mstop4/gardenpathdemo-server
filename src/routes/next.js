@@ -26,6 +26,7 @@ const fetchWordsFromRedis = (res, format, query, limit) => {
     status: null
   }
 
+  console.log(`Fetching ${query} from cache`)
   rClient.get(`next:${query}`, (err, reply) => {
     const wordList = JSON.parse(reply)
     const nextWordsAll = wordList.nextWords
@@ -41,6 +42,7 @@ const fetchWordsFromRedis = (res, format, query, limit) => {
 
     data.nextWords = nextWordsSome
 
+    console.log(`Fetched ${query} from cache`)
     sendResponse(res, format, data, 'pages/next')
   })
 }
@@ -50,6 +52,7 @@ const fetchWordsFromDatamuse = (res, format, query, limit) => {
     status: null
   }
 
+  console.log(`Fetching ${query} from Datamuse`)
   datamuse.words({
     rel_bga: query
   })
@@ -84,6 +87,7 @@ const fetchWordsFromDatamuse = (res, format, query, limit) => {
         console.log(query + ' set!')
       })
 
+      console.log(`Fetched ${query} from Datamuse`)
       sendResponse(res, format, data, 'pages/next')
     })
 }
