@@ -3,3 +3,4 @@
 .env
 yarn-error.log
 dump.rdb
+flushDb.sh
