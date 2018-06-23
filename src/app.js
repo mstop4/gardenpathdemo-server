@@ -31,3 +31,5 @@ app.use('/trigger', trigger)
 const server = app.listen(app.get('port'), () => {
   console.log(`Garden Path Server listening on port ${app.get('port')}`)
 })
+
+server.timeout = parseInt(process.env.TIMEOUT_INTERVAL)

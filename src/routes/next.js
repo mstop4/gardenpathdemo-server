@@ -28,22 +28,30 @@ const fetchWordsFromRedis = (res, format, query, limit) => {
 
   console.log(`Fetching ${query} from cache`)
   rClient.get(`next:${query}`, (err, reply) => {
-    const wordList = JSON.parse(reply)
-    const nextWordsAll = wordList.nextWords
+    if (err) {
+      data.status = 'error'
+      data.message = err
 
-    // Choose a random assortment of words
-    const numWords = limit ? Math.min(limit, nextWordsAll.length) : nextWordsAll.length
-    const choices = chance.unique(chance.integer, numWords, { min: 0, max: nextWordsAll.length - 1 })
-    let nextWordsSome = []
+      console.log(`Can't fetch ${query} from cache`)
+      sendResponse(res, format, data, 'pages/next')
+    } else {
+      const wordList = JSON.parse(reply)
+      const nextWordsAll = wordList.nextWords
 
-    choices.forEach(index => {
-      nextWordsSome.push(nextWordsAll[index])
-    })
+      // Choose a random assortment of words
+      const numWords = limit ? Math.min(limit, nextWordsAll.length) : nextWordsAll.length
+      const choices = chance.unique(chance.integer, numWords, { min: 0, max: nextWordsAll.length - 1 })
+      let nextWordsSome = []
 
-    data.nextWords = nextWordsSome
+      choices.forEach(index => {
+        nextWordsSome.push(nextWordsAll[index])
+      })
 
-    console.log(`Fetched ${query} from cache`)
-    sendResponse(res, format, data, 'pages/next')
+      data.nextWords = nextWordsSome
+
+      console.log(`Fetched ${query} from cache`)
+      sendResponse(res, format, data, 'pages/next')
+    }
   })
 }
 
@@ -88,6 +96,13 @@ const fetchWordsFromDatamuse = (res, format, query, limit) => {
       })
 
       console.log(`Fetched ${query} from Datamuse`)
+      sendResponse(res, format, data, 'pages/next')
+    })
+    .catch(err => {
+      data.status = 'error'
+      data.message = err
+
+      console.log(`Can't fetch ${query} from Datamuse`)
       sendResponse(res, format, data, 'pages/next')
     })
 }
