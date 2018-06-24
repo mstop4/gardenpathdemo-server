@@ -59,8 +59,11 @@ const fetchWordsFromDatamuse = (res, format, query, limit) => {
       // Create trigger word list
       let triggerWordsAll = []
 
+      // get validate words from list, remove periods, "I" (doesn't work for some reason), and numbers
       json.forEach(entry => {
-        if (entry.word !== '.') {
+        if (entry.word !== '.' && 
+            entry.word !== 'i' &&
+            !(+entry.word === +entry.word)) {
           triggerWordsAll.push(entry.word)
         }
       })
